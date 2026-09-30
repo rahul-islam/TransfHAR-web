@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.DS_Store
+*.local
+
+# Private research code checked out locally (SPICExLAB/IMU-SSL); not published
+res/IMU-SSL/
+.gitmodules.local

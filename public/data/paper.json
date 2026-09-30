@@ -1,0 +1,931 @@
+{
+  "meta": {
+    "title": "TransfHAR: Self-Supervised Wrist Representations for On-Demand Activity Recognition",
+    "short": "TransfHAR",
+    "venue": "UIST '26 · Detroit, MI · Nov 2–5, 2026",
+    "doi": "10.1145/3830398.3830553",
+    "authors": [
+      {
+        "name": "Aidan Bradshaw",
+        "affiliation": "Northwestern University"
+      },
+      {
+        "name": "Riku Arakawa",
+        "affiliation": "Carnegie Mellon University"
+      },
+      {
+        "name": "Xin Liu",
+        "affiliation": "Google"
+      },
+      {
+        "name": "Karan Ahuja",
+        "affiliation": "Northwestern University"
+      }
+    ],
+    "links": {
+      "pdf": "TransfHAR.pdf",
+      "code": "https://github.com/Abradshaw1/IMU_LM_Data",
+      "doi": "https://doi.org/10.1145/3830398.3830553"
+    },
+    "tagline": "Pretrain on coarse, unlabeled wrist motion. Recognize fine-grained, user-defined activities from a few demonstrations on a smartwatch.",
+    "abstract": "Fine-grained wrist activity recognition can support applications such as procedural step guidance and context-aware assistance, yet acquiring labeled data for every new task, user, and activity granularity remains a bottleneck. TransfHAR is a self-supervised wrist IMU framework that learns transferable motion priors from global, unlabeled activities. Self-supervised pretraining on coarse wrist IMU activities (e.g., sitting, walking, exercise) learns motion structure rich enough to transfer to fine-grained manipulative, gestural, and procedural activities (e.g., snapping, stirring, waving) that are absent from pretraining. TransfHAR runs as a real-time smartwatch application that lets users define and expand their own activity set from only a few demonstrations.",
+    "bibtex": "@inproceedings{bradshaw2026transfhar,\n  title     = {TransfHAR: Self-Supervised Wrist Representations for On-Demand Activity Recognition},\n  author    = {Bradshaw, Aidan and Arakawa, Riku and Liu, Xin and Ahuja, Karan},\n  booktitle = {The 39th Annual ACM Symposium on User Interface Software and Technology (UIST '26)},\n  year      = {2026},\n  address   = {Detroit, MI, USA},\n  publisher = {ACM},\n  doi       = {10.1145/3830398.3830553}\n}"
+  },
+  "headline": [
+    {
+      "value": "+6.2",
+      "unit": "pp",
+      "label": "balanced accuracy over fully supervised baselines, averaged across three held-out benchmarks"
+    },
+    {
+      "value": "86.7",
+      "unit": "%",
+      "label": "user-study balanced accuracy with 5 demonstrations (12.8 s) per class"
+    },
+    {
+      "value": "90.4",
+      "unit": "%",
+      "label": "user-study balanced accuracy from one 1-minute recording per class"
+    }
+  ],
+  "system": {
+    "encoder": "ViT-1D (adapted from LSM-2): 12 layers, 384-dim, 6 heads",
+    "params": "21.4M",
+    "gflops": "8.83",
+    "sizeMB": "40.8",
+    "latencyMs": "23.8",
+    "refresh": "1.3 s",
+    "window": "2.56 s (128 samples @ 50 Hz), 50% overlap",
+    "tokensPerChannel": 32,
+    "maskRatio": 0.65,
+    "probeTrainMs": {
+      "1": 709,
+      "5": 706,
+      "10": 794,
+      "20": 786
+    },
+    "probeParamsPerClass": 385,
+    "device": "Apple Watch Series 10 (Core ML, fully on-device)"
+  },
+  "taxonomy": [
+    {
+      "level": "L1",
+      "name": "Quasi-static",
+      "hours": 1864,
+      "share": 67.5,
+      "signal": "Gravity-dominated, slow postural drift, low energy above DC",
+      "examples": "Sitting, standing, lying, watching TV, car driving",
+      "role": "Pretraining"
+    },
+    {
+      "level": "L2",
+      "name": "Locomotor",
+      "hours": 677,
+      "share": 24.5,
+      "signal": "Quasi-periodic, dominant spectral peak",
+      "examples": "Walking, running, cycling, repetitive exercise",
+      "role": "Pretraining"
+    },
+    {
+      "level": "L3",
+      "name": "Manipulative",
+      "hours": 212,
+      "share": 7.7,
+      "signal": "Aperiodic, variable amplitude, no dominant frequency",
+      "examples": "Chopping, brushing teeth, typing, drilling",
+      "role": "Held-out probing (SAMoSA, UTD-MHAD) and user study"
+    },
+    {
+      "level": "L4",
+      "name": "Procedural",
+      "hours": 7,
+      "share": 0.2,
+      "signal": "L3-like per window; separable only with temporal context",
+      "examples": "Action steps for cooking, latte-making",
+      "role": "Held-out probing (PrISM-Tracker)"
+    }
+  ],
+  "datasets": [
+    {
+      "id": "recofit",
+      "name": "RecoFit",
+      "subjects": 114,
+      "hours": "79.8",
+      "placement": "Right forearm",
+      "hz": 50,
+      "axes": "6 (A+G)",
+      "classes": "28",
+      "role": "Pretrain"
+    },
+    {
+      "id": "pamap2",
+      "name": "PAMAP2",
+      "subjects": 9,
+      "hours": "~10",
+      "placement": "Wrist, chest, ankle",
+      "hz": 100,
+      "axes": "9 (A+G+M)",
+      "classes": "18",
+      "role": "Pretrain"
+    },
+    {
+      "id": "opportunity",
+      "name": "Opportunity++",
+      "subjects": 4,
+      "hours": "19.75",
+      "placement": "Full body (7 IMU + 12 Acc)",
+      "hz": 30,
+      "axes": "17 (A+G+M)",
+      "classes": "17",
+      "role": "Pretrain"
+    },
+    {
+      "id": "wisdm",
+      "name": "WISDM",
+      "subjects": 51,
+      "hours": "45.9",
+      "placement": "Watch (dom. wrist) + phone",
+      "hz": 20,
+      "axes": "6 (A+G)",
+      "classes": "18",
+      "role": "Pretrain"
+    },
+    {
+      "id": "shoaib",
+      "name": "Shoaib",
+      "subjects": 10,
+      "hours": "6.5",
+      "placement": "Wrist (phone) + pocket",
+      "hz": 50,
+      "axes": "6 (A+G)",
+      "classes": "13",
+      "role": "Pretrain"
+    },
+    {
+      "id": "wear",
+      "name": "WEAR",
+      "subjects": 22,
+      "hours": "19",
+      "placement": "Both wrists + ankles",
+      "hz": 50,
+      "axes": "3 (A)",
+      "classes": "18",
+      "role": "Pretrain"
+    },
+    {
+      "id": "capture24",
+      "name": "Capture-24",
+      "subjects": 151,
+      "hours": "2,562",
+      "placement": "Dominant wrist",
+      "hz": 100,
+      "axes": "3 (A)",
+      "classes": "206",
+      "role": "Pretrain"
+    },
+    {
+      "id": "utwatch",
+      "name": "UT-Watch",
+      "subjects": 20,
+      "hours": "~17",
+      "placement": "Dominant wrist",
+      "hz": 50,
+      "axes": "6 (A+G)",
+      "classes": "23",
+      "role": "Pretrain"
+    },
+    {
+      "id": "samosa",
+      "name": "SAMoSA",
+      "subjects": 20,
+      "hours": "14.2",
+      "placement": "Dominant wrist",
+      "hz": 50,
+      "axes": "9 (A+G+O)",
+      "classes": "27",
+      "role": "Probe",
+      "level": "L3",
+      "confusion": "samosa",
+      "description": "27 everyday activity classes across kitchen, bathroom, and workshop, recorded in homes and workshops. Motion stream only (audio unused)."
+    },
+    {
+      "id": "prism",
+      "name": "PrISM-Tracker",
+      "subjects": 14,
+      "hours": "~2.7",
+      "placement": "Right wrist",
+      "hz": 50,
+      "axes": "9 (A+G+O)",
+      "classes": "8–19",
+      "role": "Probe",
+      "level": "L4",
+      "confusion": "prism_latte",
+      "description": "Eight multi-step procedures. Latte-making (19 steps, 23 sessions) is used for few-shot and full-split comparison; all eight are compared against PrISM's motion-only baseline."
+    },
+    {
+      "id": "utd",
+      "name": "UTD-MHAD",
+      "subjects": 8,
+      "hours": "~1.6",
+      "placement": "Right wrist (1–21), right thigh (22–27)",
+      "hz": 50,
+      "axes": "6 (A+G)",
+      "classes": "27 (21 wrist used)",
+      "role": "Probe",
+      "level": "L3",
+      "confusion": "utd",
+      "description": "Short, burst-like gesture and exercise motions (arm swings, drawing, knocks, throws). Inertial modality only, 21-class wrist subset."
+    }
+  ],
+  "fewshot": {
+    "note": "Balanced accuracy (%), mean (SD) over 5 seeds. Points not stated numerically in the paper text are omitted.",
+    "ks": [
+      "1",
+      "5",
+      "10",
+      "20",
+      "Full"
+    ],
+    "series": {
+      "samosa": {
+        "label": "SAMoSA (L3, 27 cls)",
+        "sixAxis": {
+          "1": [
+            21.8,
+            2.8
+          ],
+          "5": [
+            42.6,
+            2.9
+          ],
+          "20": [
+            55.4,
+            0.9
+          ],
+          "Full": [
+            64.9,
+            0.7
+          ]
+        },
+        "threeAxis": {
+          "20": [
+            48.4,
+            1.9
+          ],
+          "Full": [
+            59.0,
+            0.5
+          ]
+        },
+        "baseline": 56.8,
+        "baselineNote": "Published supervised baseline, 9-axis (A+G+O)"
+      },
+      "prism": {
+        "label": "PrISM latte (L4, 19 cls)",
+        "sixAxis": {
+          "1": [
+            14.5,
+            2.5
+          ],
+          "20": [
+            27.6,
+            1.3
+          ],
+          "Full": [
+            36.5,
+            1.1
+          ]
+        },
+        "threeAxis": {
+          "Full": [
+            32.6,
+            null
+          ]
+        },
+        "baseline": 31.0,
+        "baselineNote": "PrISM-Tracker motion-only baseline, 9-axis (A+G+O)"
+      },
+      "utd": {
+        "label": "UTD-MHAD (L3, 21 cls)",
+        "sixAxis": {
+          "1": [
+            31.2,
+            1.7
+          ],
+          "5": [
+            46.3,
+            3.8
+          ],
+          "20": [
+            61.7,
+            3.8
+          ],
+          "Full": [
+            69.1,
+            2.3
+          ]
+        },
+        "threeAxis": {
+          "Full": [
+            52.1,
+            6.6
+          ]
+        },
+        "baseline": 64.1,
+        "baselineNote": "Yang et al. inertial baseline, 6-axis (A+G)"
+      }
+    }
+  },
+  "prismProcedures": [
+    {
+      "name": "Cooking",
+      "steps": 14,
+      "baseline": 41.1,
+      "threeAxis": 43.1,
+      "sixAxis": 49.9
+    },
+    {
+      "name": "Skin Care",
+      "steps": 12,
+      "baseline": 47.2,
+      "threeAxis": 44.1,
+      "sixAxis": 48.1
+    },
+    {
+      "name": "MakeCoffee",
+      "steps": 8,
+      "baseline": 35.6,
+      "threeAxis": 34.8,
+      "sixAxis": 44.8
+    },
+    {
+      "name": "MakeCereal",
+      "steps": 8,
+      "baseline": 39.7,
+      "threeAxis": 37.2,
+      "sixAxis": 42.3
+    },
+    {
+      "name": "MakeTea",
+      "steps": 9,
+      "baseline": 34.4,
+      "threeAxis": 35.7,
+      "sixAxis": 40.6
+    },
+    {
+      "name": "Latte Making",
+      "steps": 19,
+      "baseline": 31.0,
+      "threeAxis": 32.6,
+      "sixAxis": 36.5
+    },
+    {
+      "name": "MakeSandwich",
+      "steps": 9,
+      "baseline": 28.7,
+      "threeAxis": 31.1,
+      "sixAxis": 35.3
+    },
+    {
+      "name": "MakeStencil",
+      "steps": 17,
+      "baseline": 19.9,
+      "threeAxis": 25.9,
+      "sixAxis": 29.6
+    }
+  ],
+  "regimes": {
+    "note": "Table 3. Same 6-axis ViT-1D, full training split. Balanced accuracy, mean (SD) over five seeds.",
+    "columns": [
+      "SAMoSA",
+      "PrISM latte",
+      "UTD-MHAD"
+    ],
+    "rows": [
+      {
+        "name": "From scratch (no SSL)",
+        "values": [
+          [
+            28.8,
+            3.4
+          ],
+          [
+            16.2,
+            3.1
+          ],
+          [
+            46.4,
+            2.2
+          ]
+        ]
+      },
+      {
+        "name": "Pretrained, fine-tuned",
+        "values": [
+          [
+            61.4,
+            0.8
+          ],
+          [
+            34.4,
+            0.8
+          ],
+          [
+            65.4,
+            3.6
+          ]
+        ]
+      },
+      {
+        "name": "Pretrained, frozen + probe",
+        "values": [
+          [
+            64.9,
+            0.7
+          ],
+          [
+            36.5,
+            1.1
+          ],
+          [
+            69.1,
+            2.3
+          ]
+        ],
+        "ours": true
+      }
+    ]
+  },
+  "windows": {
+    "note": "Table 4. Frozen 6-axis encoder + linear probe, full split. Balanced accuracy, mean (SD) over five seeds.",
+    "columns": [
+      "1.28 s",
+      "2.56 s",
+      "5.12 s"
+    ],
+    "rows": [
+      {
+        "name": "SAMoSA (L3)",
+        "values": [
+          [
+            50.8,
+            0.6
+          ],
+          [
+            64.9,
+            0.7
+          ],
+          [
+            61.4,
+            1.4
+          ]
+        ]
+      },
+      {
+        "name": "UTD-MHAD (L3)",
+        "values": [
+          [
+            46.7,
+            0.3
+          ],
+          [
+            69.1,
+            2.3
+          ],
+          [
+            57.1,
+            3.5
+          ]
+        ]
+      },
+      {
+        "name": "PrISM latte (L4)",
+        "values": [
+          [
+            29.2,
+            0.3
+          ],
+          [
+            36.5,
+            1.1
+          ],
+          [
+            38.1,
+            2.9
+          ]
+        ]
+      }
+    ]
+  },
+  "userStudy": {
+    "design": "10 participants (7 right-handed, 3 left-handed; mean age 26.1) each chose 7 activities. Three separate 1-minute sessions per activity, with the watch removed and re-worn between sessions. Cross-session round robin: one session trains the probe, the two held-out sessions are the test set.",
+    "fewshot": {
+      "ks": [
+        "1",
+        "5",
+        "20",
+        "Full"
+      ],
+      "sixAxis": {
+        "1": [
+          75.2,
+          15.6
+        ],
+        "5": [
+          86.7,
+          8.5
+        ],
+        "20": [
+          89.3,
+          null
+        ],
+        "Full": [
+          90.4,
+          4.8
+        ]
+      },
+      "threeAxis": {
+        "1": [
+          67.8,
+          15.7
+        ],
+        "5": [
+          81.9,
+          8.6
+        ],
+        "20": [
+          85.7,
+          null
+        ],
+        "Full": [
+          87.3,
+          6.6
+        ]
+      },
+      "macroF1Full": {
+        "sixAxis": [
+          89.9,
+          5.3
+        ],
+        "threeAxis": [
+          86.6,
+          7.2
+        ]
+      }
+    },
+    "vocabulary": {
+      "note": "All participants pooled into one non-personalized probe; 70 trials train, 140 held-out trials test. Most of the drop happens below 30 classes; the 6-axis model varies by less than 1 point from 30 to 60 classes.",
+      "sixAxis": {
+        "10": 93.6,
+        "70": 82.1
+      },
+      "threeAxis": {
+        "10": 88.8,
+        "70": 72.5
+      }
+    },
+    "handedness": {
+      "R": [
+        88.7,
+        5.0
+      ],
+      "L": [
+        94.2,
+        2.3
+      ]
+    },
+    "participants": [
+      {
+        "id": "P1",
+        "hand": "L"
+      },
+      {
+        "id": "P2",
+        "hand": "L"
+      },
+      {
+        "id": "P3",
+        "hand": "R"
+      },
+      {
+        "id": "P4",
+        "hand": "R"
+      },
+      {
+        "id": "P5",
+        "hand": "L"
+      },
+      {
+        "id": "P6",
+        "hand": "R"
+      },
+      {
+        "id": "P7",
+        "hand": "R"
+      },
+      {
+        "id": "P8",
+        "hand": "R"
+      },
+      {
+        "id": "P9",
+        "hand": "R"
+      },
+      {
+        "id": "P10",
+        "hand": "R"
+      }
+    ],
+    "perClassAccuracy": {
+      "note": "Figure 13. 6-axis, full-session setting. Act 1–7 follow Table 6 order.",
+      "P1": [
+        100,
+        100,
+        100,
+        100,
+        75,
+        67,
+        100
+      ],
+      "P2": [
+        92,
+        95,
+        100,
+        100,
+        100,
+        95,
+        91
+      ],
+      "P3": [
+        95,
+        79,
+        100,
+        84,
+        100,
+        88,
+        90
+      ],
+      "P4": [
+        100,
+        92,
+        94,
+        100,
+        60,
+        95,
+        83
+      ],
+      "P5": [
+        100,
+        96,
+        100,
+        86,
+        100,
+        97,
+        84
+      ],
+      "P6": [
+        94,
+        94,
+        90,
+        72,
+        85,
+        79,
+        82
+      ],
+      "P7": [
+        100,
+        64,
+        50,
+        91,
+        100,
+        53,
+        96
+      ],
+      "P8": [
+        69,
+        100,
+        100,
+        100,
+        100,
+        93,
+        79
+      ],
+      "P9": [
+        92,
+        100,
+        100,
+        100,
+        79,
+        93,
+        93
+      ],
+      "P10": [
+        85,
+        100,
+        87,
+        100,
+        73,
+        94,
+        100
+      ]
+    }
+  },
+  "purity": {
+    "note": "Figure 10. 15-nearest-neighbor label purity in the 384-dim embedding space of the frozen 6-axis encoder.",
+    "separable": [
+      [
+        "stirring coffee",
+        100
+      ],
+      [
+        "opening Gatorade bottle",
+        99
+      ],
+      [
+        "rock paper scissors",
+        99
+      ],
+      [
+        "fist bump",
+        98
+      ],
+      [
+        "screwing mason jar lid",
+        98
+      ],
+      [
+        "pouring water between cups",
+        97
+      ],
+      [
+        "drawing figure eight in the air",
+        97
+      ],
+      [
+        "karate chop",
+        97
+      ],
+      [
+        "eating with chopsticks",
+        97
+      ],
+      [
+        "snapping",
+        97
+      ]
+    ],
+    "entangled": [
+      [
+        "writing with pen",
+        59
+      ],
+      [
+        "writing with marker",
+        57
+      ],
+      [
+        "winding rope",
+        56
+      ],
+      [
+        "using computer mouse",
+        55
+      ],
+      [
+        "taking phone out of pocket",
+        53
+      ],
+      [
+        "shuffling deck of cards",
+        50
+      ],
+      [
+        "scratching nails",
+        38
+      ],
+      [
+        "phone scrolling",
+        36
+      ],
+      [
+        "putting on lotion",
+        36
+      ],
+      [
+        "twisting screwdriver",
+        23
+      ]
+    ],
+    "separableMean": 98,
+    "entangledMean": 46
+  },
+  "activityBank": [
+    {
+      "category": "Hand / air gestures",
+      "items": [
+        "drawing a heart in the air",
+        "drawing a circle in the air",
+        "drawing a figure-eight in the air",
+        "waving goodbye",
+        "conducting an orchestra",
+        "air drumming",
+        "shadow boxing",
+        "finger snapping sequence",
+        "thumbs up/down toggle",
+        "pointing at corners of the room",
+        "tracing the alphabet in the air",
+        "karate chop motion",
+        "fist pump",
+        "jazz hands",
+        "air guitar strumming"
+      ]
+    },
+    {
+      "category": "Object manipulation",
+      "items": [
+        "stirring coffee with a spoon",
+        "opening/closing a laptop lid",
+        "turning a doorknob",
+        "flipping pages of a book",
+        "stacking/unstacking cups",
+        "shuffling a deck of cards",
+        "peeling tape off a roll",
+        "crumpling paper into a ball",
+        "folding a sheet of paper in half",
+        "uncapping and recapping a marker",
+        "rolling a ball of clay",
+        "winding a cord around your hand",
+        "zipping/unzipping a bag",
+        "tearing paper into strips",
+        "clicking a retractable pen repeatedly"
+      ]
+    },
+    {
+      "category": "Tool-like / workspace",
+      "items": [
+        "typing on a keyboard",
+        "using a computer mouse (clicking and dragging)",
+        "writing with a pen on paper",
+        "erasing a whiteboard",
+        "cutting paper with scissors",
+        "stapling papers",
+        "using a screwdriver",
+        "tightening a jar lid",
+        "pouring water between cups",
+        "wiping a table with a cloth",
+        "peeling a sticky note off a pad",
+        "pressing buttons on a calculator",
+        "turning a dial/knob",
+        "plugging/unplugging a USB cable",
+        "sharpening a pencil"
+      ]
+    },
+    {
+      "category": "Personal / body",
+      "items": [
+        "brushing hair",
+        "applying hand sanitizer (rubbing hands)",
+        "putting on / taking off a wristwatch",
+        "buttoning / unbuttoning a shirt cuff",
+        "tying a shoelace",
+        "rolling up a sleeve",
+        "stretching a rubber band between fingers",
+        "cracking knuckles (hand flex)",
+        "filing nails with an emery board",
+        "putting on and removing a glove"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "title": "Coarse motion transfers to fine-grained activity",
+      "body": "Pretraining only on L1/L2 activities (sitting, walking, exercise) yields a frozen encoder that beats fully supervised pipelines on held-out L3 and L4 benchmarks.",
+      "link": "datasets"
+    },
+    {
+      "title": "Freeze, don't fine-tune",
+      "body": "With identical architecture, a frozen encoder + linear probe beats full fine-tuning on all three benchmarks, and training from scratch falls far behind.",
+      "link": "models"
+    },
+    {
+      "title": "The gyroscope matters",
+      "body": "The 6-axis encoder beats the 3-axis one at nearly every supervision level, despite a smaller pretraining corpus. The gap is widest on SAMoSA and at one shot.",
+      "link": "models"
+    },
+    {
+      "title": "Five shots gets most of the way",
+      "body": "In the user study, accuracy jumps from 75.2% at K=1 to 86.7% at K=5. By K=20 it is within 1.1 pp of the full one-minute session.",
+      "link": "study"
+    },
+    {
+      "title": "Procedures need temporal context",
+      "body": "PrISM procedural steps stay hard (36.5% on latte-making) because steps look alike within a 2.56 s window. Only PrISM benefits from longer 5.12 s windows.",
+      "link": "models"
+    },
+    {
+      "title": "Failures are sustained, low-amplitude motions",
+      "body": "Writing, phone scrolling, and applying lotion collapse into a shared embedding region. More examples don't fix genuinely overlapping wrist motion.",
+      "link": "study"
+    }
+  ]
+}
