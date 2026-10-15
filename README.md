@@ -13,7 +13,7 @@ npm run dev        # http://localhost:5173
 npm run build      # static site in dist/
 ```
 
-Set `BASE` when the site is served from a subpath, e.g. `BASE=/TransfHAR-web/ npm run build`.
+Set `BASE` when the site is served from a subpath, e.g. `BASE=/TransfHAR/ npm run build`.
 
 ## Data
 
